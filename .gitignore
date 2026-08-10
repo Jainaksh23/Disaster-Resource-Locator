@@ -40,3 +40,6 @@ Thumbs.db
 
 # ─── Alembic auto-generated (keep versions/ dir itself) ─────────────────────
 # versions/ is tracked — only the placeholder
+
+# 🟢 Archives 🟢
+*.zip
