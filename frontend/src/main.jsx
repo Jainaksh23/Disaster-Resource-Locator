@@ -9,6 +9,7 @@ import Dashboard from './pages/dashboard'
 import MapPage from './pages/map'
 import Report from './pages/report'
 import Login from './pages/login'
+import Register from './pages/register'
 import './index.css'
 
 const queryClient = new QueryClient()
@@ -48,6 +49,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             {/* Admin & Responder Routes */}
             <Route 
               path="/" 

@@ -1,23 +1,20 @@
 import { useState } from "react"
-import { useNavigate, useLocation, Link } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import { ShieldAlert, Loader2 } from "lucide-react"
-import { useAuth } from "../context/AuthContext"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card"
 import { Input } from "../components/ui/input"
 import { Button } from "../components/ui/button"
+import { apiFetch } from "../api/client"
 
-export default function Login() {
+export default function Register() {
+  const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   
-  const { login } = useAuth()
   const navigate = useNavigate()
-  const location = useLocation()
-  
-  const from = location.state?.from?.pathname || "/dashboard"
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -25,18 +22,18 @@ export default function Login() {
     setIsLoading(true)
     
     try {
-      const loggedInUser = await login(email, password)
-      
-      // Determine destination based on role, unless they were trying to access a specific page
-      let destination = loggedInUser.role === "citizen" ? "/report" : "/dashboard"
-      
-      if (location.state?.from?.pathname && location.state.from.pathname !== "/") {
-         destination = location.state.from.pathname
-      }
-      
-      navigate(destination, { replace: true })
+      await apiFetch("/api/v1/auth/register", {
+        method: "POST",
+        body: JSON.stringify({ 
+          full_name: name,
+          email, 
+          password 
+        })
+      })
+      // Success, redirect to login
+      navigate("/login", { replace: true })
     } catch (err) {
-      setError(err.message || "Failed to login")
+      setError(err.message || "Failed to register")
       setIsLoading(false)
     }
   }
@@ -47,22 +44,32 @@ export default function Login() {
         <div className="flex flex-col items-center mb-8">
           <ShieldAlert className="h-12 w-12 text-destructive mb-4" />
           <h1 className="text-2xl font-bold tracking-tight">DisasterLocator</h1>
-          <p className="text-sm text-muted-foreground mt-2">Emergency Operations Center</p>
+          <p className="text-sm text-muted-foreground mt-2">Create Citizen Account</p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Sign In</CardTitle>
-            <CardDescription>Enter your credentials to access the dashboard.</CardDescription>
+            <CardTitle>Sign Up</CardTitle>
+            <CardDescription>Join to report and view emergency incidents.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Full Name</label>
+                <Input 
+                  type="text" 
+                  required 
+                  placeholder="John Doe"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Email address</label>
                 <Input 
                   type="email" 
                   required 
-                  placeholder="admin@example.com"
+                  placeholder="citizen@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -72,6 +79,7 @@ export default function Login() {
                 <Input 
                   type="password" 
                   required 
+                  minLength={8}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -85,24 +93,18 @@ export default function Login() {
 
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                {isLoading ? "Signing in..." : "Sign In"}
+                {isLoading ? "Creating account..." : "Sign Up"}
               </Button>
               
               <div className="text-center text-sm text-muted-foreground mt-4">
-                Don't have an account?{" "}
-                <Link to="/register" className="text-primary hover:underline font-medium">
-                  Sign up
+                Already have an account?{" "}
+                <Link to="/login" className="text-primary hover:underline font-medium">
+                  Login
                 </Link>
               </div>
             </form>
           </CardContent>
         </Card>
-        
-        <div className="mt-8 text-center text-xs text-muted-foreground">
-          <p>Demo accounts (password: any):</p>
-          <p>admin@disaster.dev / citizen@disaster.dev</p>
-          <p className="mt-1 opacity-70">Note: Actual passwords are admin1234 / citizen1234</p>
-        </div>
       </div>
     </div>
   )

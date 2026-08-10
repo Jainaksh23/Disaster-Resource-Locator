@@ -80,8 +80,9 @@ export default function AdminLayout() {
               <span className="text-sm font-medium">{user?.full_name || "Admin"}</span>
               <span className="text-xs text-muted-foreground capitalize">{user?.role || "admin"}</span>
             </div>
-            <Button variant="ghost" size="icon" onClick={logout} title="Log out">
-              <LogOut className="h-4 w-4" />
+            <Button variant="outline" size="sm" onClick={logout} className="ml-4 shrink-0">
+              <LogOut className="h-4 w-4 mr-2" />
+              Log out
             </Button>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { Link, Outlet } from "react-router-dom"
-import { ShieldAlert, Map, LayoutDashboard, Menu } from "lucide-react"
+import { ShieldAlert, Map, LayoutDashboard, Menu, LogOut } from "lucide-react"
 import { useAuth } from "../context/AuthContext"
 import { Button } from "./ui/button"
 
@@ -34,7 +34,8 @@ export default function CitizenLayout() {
             <span className="text-sm text-muted-foreground hidden md:inline-block">
               {user?.full_name || user?.email}
             </span>
-            <Button variant="outline" size="sm" onClick={logout}>
+            <Button variant="outline" size="sm" onClick={logout} className="shrink-0">
+              <LogOut className="h-4 w-4 mr-2" />
               Log out
             </Button>
           </div>
