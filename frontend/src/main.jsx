@@ -8,6 +8,8 @@ import AdminLayout from './components/admin-layout'
 import Dashboard from './pages/dashboard'
 import MapPage from './pages/map'
 import Report from './pages/report'
+import Reports from './pages/reports'
+import Resources from './pages/resources'
 import Login from './pages/login'
 import Register from './pages/register'
 import './index.css'
@@ -65,8 +67,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="map" element={<MapPage />} />
               <Route path="report" element={<Report />} />
-              <Route path="resources" element={<MapPage />} /> {/* Placeholder */}
-              <Route path="reports" element={<Dashboard />} /> {/* Placeholder */}
+              <Route path="resources" element={<Resources />} />
+              <Route path="reports" element={<Reports />} />
             </Route>
 
             {/* Citizen Routes */}

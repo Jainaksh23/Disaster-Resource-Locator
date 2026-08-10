@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { MapContainer, TileLayer, useMap } from "react-leaflet"
 import L from 'leaflet'
 import 'leaflet.heat'
@@ -10,6 +10,7 @@ import { Badge } from "../components/ui/badge"
 import { Button } from "../components/ui/button"
 import { Skeleton } from "../components/ui/skeleton"
 import { apiFetch } from "../api/client"
+import ReportModal from "../components/report-modal"
 
 // Heatmap Layer Component
 function HeatmapLayer({ points }) {
@@ -53,21 +54,6 @@ export default function Dashboard() {
     queryFn: async () => {
       // Sort normally handled by backend, we fetch page 1
       return await apiFetch('/api/v1/reports/')
-    }
-  })
-
-  // Status Update Mutation
-  const updateStatus = useMutation({
-    mutationFn: async ({ id, status }) => {
-      return await apiFetch(`/api/v1/reports/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status })
-      })
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['reports'])
-      queryClient.invalidateQueries(['dashboard-stats'])
-      setSelectedReport(null)
     }
   })
 
@@ -197,103 +183,10 @@ export default function Dashboard() {
       </div>
 
       {/* ── Report Details Modal ── */}
-      {selectedReport && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
-          <Card className="w-full max-w-2xl shadow-2xl relative max-h-[90vh] overflow-y-auto">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div>
-                  <Badge variant="destructive" className="mb-2">Severity {selectedReport.severity_score}</Badge>
-                  <CardTitle className="text-xl">{selectedReport.title}</CardTitle>
-                  <CardDescription className="mt-1">{selectedReport.location_name}</CardDescription>
-                </div>
-                <Button variant="ghost" size="icon" onClick={() => setSelectedReport(null)}>
-                  &times;
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              
-              <div>
-                <h4 className="text-sm font-semibold mb-2">Description</h4>
-                <p className="text-sm text-muted-foreground bg-accent p-3 rounded-md">
-                  {selectedReport.description}
-                </p>
-              </div>
-
-              {/* Gemini AI Extracted Data */}
-              {selectedReport.structured_data && (
-                <div>
-                  <h4 className="text-sm font-semibold mb-2">AI Extraction (Gemini)</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-3 border rounded-md">
-                      <span className="text-xs text-muted-foreground">Injuries</span>
-                      <p className="font-bold text-lg">{selectedReport.structured_data.injury_count ?? 'N/A'}</p>
-                    </div>
-                    <div className="p-3 border rounded-md">
-                      <span className="text-xs text-muted-foreground">People Trapped</span>
-                      <p className="font-bold text-lg text-destructive">{selectedReport.structured_data.people_trapped ?? 'N/A'}</p>
-                    </div>
-                    <div className="p-3 border rounded-md">
-                      <span className="text-xs text-muted-foreground">Structural Damage</span>
-                      <p className="font-bold text-lg">{selectedReport.structured_data.structural_damage ? 'Yes' : 'No'}</p>
-                    </div>
-                    <div className="p-3 border rounded-md">
-                      <span className="text-xs text-muted-foreground">AI Confidence</span>
-                      <p className="font-bold text-lg">
-                        {selectedReport.structured_data.confidence_score 
-                          ? `${(selectedReport.structured_data.confidence_score * 100).toFixed(0)}%` 
-                          : 'N/A'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* RAG Suggested Actions */}
-              {selectedReport.suggested_actions !== undefined && (
-                <div>
-                  <h4 className="text-sm font-semibold mb-2">SOP Recommended Actions (RAG)</h4>
-                  {selectedReport.suggested_actions.length > 0 ? (
-                    <div className="space-y-2">
-                      {selectedReport.suggested_actions.map((action, idx) => (
-                        <div key={idx} className="p-3 border rounded-md border-primary/20 bg-primary/5">
-                          <h5 className="font-bold text-sm text-primary mb-1">{action.title}</h5>
-                          <p className="text-xs text-muted-foreground">{action.content}</p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground italic bg-accent/50 p-3 rounded-md border">
-                      No SOP suggestions available (RAG disabled).
-                    </p>
-                  )}
-                </div>
-              )}
-
-            </CardContent>
-            <CardFooter className="flex justify-end space-x-2 border-t pt-6">
-              {selectedReport.status === 'active' && (
-                <Button 
-                  onClick={() => updateStatus.mutate({ id: selectedReport.id, status: 'contained' })}
-                  disabled={updateStatus.isPending}
-                >
-                  {updateStatus.isPending ? <Loader2 className="animate-spin w-4 h-4" /> : 'Mark as Contained'}
-                </Button>
-              )}
-              {selectedReport.status !== 'resolved' && (
-                <Button 
-                  variant="secondary"
-                  onClick={() => updateStatus.mutate({ id: selectedReport.id, status: 'resolved' })}
-                  disabled={updateStatus.isPending}
-                >
-                  Mark as Resolved
-                </Button>
-              )}
-            </CardFooter>
-          </Card>
-        </div>
-      )}
+      <ReportModal 
+        report={selectedReport} 
+        onClose={() => setSelectedReport(null)} 
+      />
 
     </div>
   )
