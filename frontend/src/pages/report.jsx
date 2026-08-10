@@ -28,6 +28,7 @@ function LocationMarker({ position, setPosition }) {
 
 export default function Report() {
   const [title, setTitle] = useState("")
+  const [category, setCategory] = useState("")
   const [description, setDescription] = useState("")
   const [locationName, setLocationName] = useState("")
   const [position, setPosition] = useState(null)
@@ -94,6 +95,7 @@ export default function Report() {
     e.preventDefault()
     submitMutation.mutate({
       title,
+      category,
       description,
       location_name: locationName || "Unknown Location",
       latitude: position?.lat,
@@ -122,6 +124,24 @@ export default function Report() {
                 value={title} 
                 onChange={e => setTitle(e.target.value)} 
               />
+            </div>
+
+            {/* Category */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Category</label>
+              <select
+                required
+                value={category}
+                onChange={e => setCategory(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <option value="" disabled>Select a category</option>
+                <option value="fire">Fire</option>
+                <option value="flood">Flood</option>
+                <option value="medical">Medical</option>
+                <option value="collapse">Collapse</option>
+                <option value="other">Other</option>
+              </select>
             </div>
 
             {/* Description & Voice */}
