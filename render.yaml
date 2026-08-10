@@ -1,0 +1,20 @@
+# render.yaml — Single web service deployment
+# Builds BOTH frontend + backend into one Docker image.
+# The FastAPI server handles API routes AND serves the React SPA.
+services:
+  - type: web
+    name: disaster-locator
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false          # Set in Render dashboard — use postgresql+asyncpg:// scheme
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: APP_ENV
+        value: production
