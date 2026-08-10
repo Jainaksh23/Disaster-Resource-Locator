@@ -32,7 +32,7 @@ function ProtectedRoute({ children }) {
   return children
 }
 
-// Role-based Route Guard
+// Role-based Route Guard for specific pages
 function RoleRoute({ children, allowedRoles, fallbackPath }) {
   const { user } = useAuth()
   
@@ -44,6 +44,19 @@ function RoleRoute({ children, allowedRoles, fallbackPath }) {
   return children
 }
 
+// Conditional Layout Wrapper
+function RootLayout() {
+  const { user, loading } = useAuth()
+  
+  if (loading) return null
+  
+  if (user && ['admin', 'responder'].includes(user.role)) {
+    return <AdminLayout />
+  }
+  
+  return <CitizenLayout />
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
@@ -52,36 +65,36 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            {/* Admin & Responder Routes */}
+            {/* Main Application Routes */}
             <Route 
               path="/" 
               element={
                 <ProtectedRoute>
-                  <RoleRoute allowedRoles={['admin', 'responder']} fallbackPath="/report">
-                    <AdminLayout />
-                  </RoleRoute>
+                  <RootLayout />
                 </ProtectedRoute>
               }
             >
+              {/* Default Redirect */}
               <Route index element={<Navigate to="/dashboard" replace />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="map" element={<MapPage />} />
-              <Route path="report" element={<Report />} />
-              <Route path="resources" element={<Resources />} />
-              <Route path="reports" element={<Reports />} />
-            </Route>
+              
+              {/* Admin & Responder Only Routes */}
+              <Route path="dashboard" element={
+                <RoleRoute allowedRoles={['admin', 'responder']} fallbackPath="/report">
+                  <Dashboard />
+                </RoleRoute>
+              } />
+              <Route path="resources" element={
+                <RoleRoute allowedRoles={['admin', 'responder']} fallbackPath="/report">
+                  <Resources />
+                </RoleRoute>
+              } />
+              <Route path="reports" element={
+                <RoleRoute allowedRoles={['admin', 'responder']} fallbackPath="/report">
+                  <Reports />
+                </RoleRoute>
+              } />
 
-            {/* Citizen Routes */}
-            <Route 
-              path="/" 
-              element={
-                <ProtectedRoute>
-                  <RoleRoute allowedRoles={['citizen']} fallbackPath="/dashboard">
-                    <CitizenLayout />
-                  </RoleRoute>
-                </ProtectedRoute>
-              }
-            >
+              {/* Shared Routes (Accessible by all roles) */}
               <Route path="report" element={<Report />} />
               <Route path="map" element={<MapPage />} />
             </Route>
