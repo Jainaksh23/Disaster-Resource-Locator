@@ -17,8 +17,12 @@ class UserBase(BaseModel):
     role: UserRole = "citizen"
 
 
-class UserCreate(UserBase):
+class UserCreate(BaseModel):
+    email: EmailStr
+    full_name: str = Field(..., min_length=2, max_length=255)
     password: str = Field(..., min_length=8, max_length=128)
+    # Role is always "citizen" on public signup — admin accounts are seeded only
+    role: UserRole = Field(default="citizen", init=False)
 
 
 class UserUpdate(BaseModel):

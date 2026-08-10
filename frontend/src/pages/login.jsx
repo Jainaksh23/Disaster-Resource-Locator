@@ -25,11 +25,18 @@ export default function Login() {
     setIsLoading(true)
     
     try {
-      await login(email, password)
-      navigate(from, { replace: true })
+      const loggedInUser = await login(email, password)
+      
+      // Determine destination based on role, unless they were trying to access a specific page
+      let destination = loggedInUser.role === "citizen" ? "/report" : "/dashboard"
+      
+      if (location.state?.from?.pathname && location.state.from.pathname !== "/") {
+         destination = location.state.from.pathname
+      }
+      
+      navigate(destination, { replace: true })
     } catch (err) {
       setError(err.message || "Failed to login")
-    } finally {
       setIsLoading(false)
     }
   }

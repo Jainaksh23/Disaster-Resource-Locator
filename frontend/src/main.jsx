@@ -3,7 +3,8 @@ import ReactDOM from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
-import Layout from './components/layout'
+import CitizenLayout from './components/layout'
+import AdminLayout from './components/admin-layout'
 import Dashboard from './pages/dashboard'
 import MapPage from './pages/map'
 import Report from './pages/report'
@@ -28,6 +29,18 @@ function ProtectedRoute({ children }) {
   return children
 }
 
+// Role-based Route Guard
+function RoleRoute({ children, allowedRoles, fallbackPath }) {
+  const { user } = useAuth()
+  
+  // If user role is not in the allowed list, redirect to fallback
+  if (user && !allowedRoles.includes(user.role)) {
+    return <Navigate to={fallbackPath} replace />
+  }
+  
+  return children
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
@@ -35,11 +48,14 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
+            {/* Admin & Responder Routes */}
             <Route 
               path="/" 
               element={
                 <ProtectedRoute>
-                  <Layout />
+                  <RoleRoute allowedRoles={['admin', 'responder']} fallbackPath="/report">
+                    <AdminLayout />
+                  </RoleRoute>
                 </ProtectedRoute>
               }
             >
@@ -47,6 +63,23 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="map" element={<MapPage />} />
               <Route path="report" element={<Report />} />
+              <Route path="resources" element={<MapPage />} /> {/* Placeholder */}
+              <Route path="reports" element={<Dashboard />} /> {/* Placeholder */}
+            </Route>
+
+            {/* Citizen Routes */}
+            <Route 
+              path="/" 
+              element={
+                <ProtectedRoute>
+                  <RoleRoute allowedRoles={['citizen']} fallbackPath="/dashboard">
+                    <CitizenLayout />
+                  </RoleRoute>
+                </ProtectedRoute>
+              }
+            >
+              <Route path="report" element={<Report />} />
+              <Route path="map" element={<MapPage />} />
             </Route>
           </Routes>
         </BrowserRouter>

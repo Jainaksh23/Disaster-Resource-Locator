@@ -35,6 +35,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from core.database import Base
 from models.resource import Resource
 from models.emergency_report import EmergencyReport
+from models.user import User
+from core.auth import get_password_hash
 
 
 # ---------------------------------------------------------------------------
@@ -257,6 +259,21 @@ REPORTS = [
     },
 ]
 
+USERS = [
+    {
+        "email": "admin@disaster.dev",
+        "full_name": "Admin User",
+        "password": "admin1234",
+        "role": "admin",
+    },
+    {
+        "email": "citizen@disaster.dev",
+        "full_name": "Citizen User",
+        "password": "citizen1234",
+        "role": "citizen",
+    },
+]
+
 
 # ---------------------------------------------------------------------------
 # Seed logic
@@ -291,12 +308,24 @@ async def seed():
                 session.add(EmergencyReport(id=uuid.uuid4(), **rp))
                 new_reports += 1
 
+        # ── Users ─────────────────────────────────────────────────────────
+        existing_users = set(
+            (await session.execute(select(User.email))).scalars().all()
+        )
+        new_users = 0
+        for u in USERS:
+            if u["email"] not in existing_users:
+                hashed_pw = get_password_hash(u.pop("password"))
+                session.add(User(id=uuid.uuid4(), hashed_password=hashed_pw, **u))
+                new_users += 1
+
         await session.commit()
 
     # ── Verify ────────────────────────────────────────────────────────────
     async with session_factory() as session:
         total_resources = (await session.execute(text("SELECT count(*) FROM resources"))).scalar()
         total_reports = (await session.execute(text("SELECT count(*) FROM emergency_reports"))).scalar()
+        total_users = (await session.execute(text("SELECT count(*) FROM users"))).scalar()
 
     await engine.dispose()
 
@@ -305,6 +334,7 @@ async def seed():
     print("=" * 60)
     print(f"  Resources  -> inserted {new_resources} new  |  total in DB: {total_resources}")
     print(f"  Reports    -> inserted {new_reports} new  |  total in DB: {total_reports}")
+    print(f"  Users      -> inserted {new_users} new  |  total in DB: {total_users}")
     print("=" * 60)
 
 
