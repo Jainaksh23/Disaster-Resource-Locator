@@ -1,186 +1,189 @@
 # AI-Powered Disaster Resource Locator
 
-A production-ready, full-stack disaster management system built with **FastAPI** (backend) and **React + Vite** (frontend), deployed as a **single service** on **Render** with **Neon PostgreSQL**.
-
-> **Single-origin architecture:** FastAPI serves both the API (`/api/v1/*`) and the React SPA from one URL. No CORS, no separate frontend hosting, no `VITE_API_URL`.
+**A production-ready, full-stack disaster management system that leverages AI to automatically triage emergency reports and allocate critical resources.** 
+This system is designed for emergency response teams to quickly filter through the noise of citizen reports during a crisis, prioritizing the most severe incidents using Google Gemini AI, and connecting them to available nearby resources (hospitals, shelters, blood banks, etc.).
 
 ---
 
-## Project Structure
+## 🚀 Live Demo
 
+- **Production URL:** [https://disaster-resource-locator-5vne.onrender.com](https://disaster-resource-locator-5vne.onrender.com) *(May take 30-50s to spin up on initial load due to Render free tier)*
+- **Admin Credentials:** `admin@disaster.dev` / `admin1234`
+- **Citizen Credentials:** `citizen@disaster.dev` / `citizen1234`
+
+---
+
+## 🏗️ Architecture
+
+```mermaid
+graph TD
+    Client[Browser / Mobile] -->|HTTP GET / POST| Render[Render Single Web Service]
+    
+    subgraph Render Hosting
+        Render -->|Route: /api/v1/*| FastAPI[FastAPI Backend]
+        Render -->|Route: /*| React[React SPA / Static Assets]
+    end
+
+    FastAPI -->|Async SQLAlchemy| DB[(Neon Serverless Postgres)]
+    FastAPI -->|REST API| Gemini[Google Gemini AI]
+    
+    classDef render fill:#4d4d4d,stroke:#fff,stroke-width:2px;
+    classDef db fill:#00e599,stroke:#000,stroke-width:2px,color:#000;
+    classDef ai fill:#4285F4,stroke:#fff,stroke-width:2px;
+    
+    class Render render;
+    class DB db;
+    class Gemini ai;
 ```
-.
-├── backend/                 # FastAPI service
-│   ├── core/                # config.py, database.py
-│   ├── models/              # SQLAlchemy ORM models
-│   ├── routers/             # API route handlers
-│   ├── schemas/             # Pydantic request/response schemas
-│   ├── services/            # gemini_service.py, geo_service.py
-│   ├── migrations/          # Alembic (alembic.ini, env.py, versions/)
-│   ├── main.py              # FastAPI app — routes + SPA serving
-│   └── requirements.txt     # Pinned Python dependencies
-├── frontend/                # React (Vite) SPA
-│   ├── src/
-│   │   ├── api/client.js    # Relative-path API client
-│   │   ├── App.jsx          # React Router routes
-│   │   └── main.jsx         # Entry point
-│   ├── vite.config.js       # Dev proxy to localhost:8000
-│   └── package.json
-├── Dockerfile               # Multi-stage (Node build → Python runtime)
-├── render.yaml              # Single web service
-├── .env.example             # DATABASE_URL, GEMINI_API_KEY, JWT_SECRET
-└── .gitignore
-```
 
 ---
 
-## How It Works
+## 🛠️ Tech Stack
 
-`main.py` registers routes in this exact order (order matters!):
-
-1. **API routers** (`/api/v1/reports`, `/api/v1/resources`, etc.) — matched first
-2. **Static file mount** (`/assets/*`) — serves Vite's hashed JS/CSS bundles
-3. **SPA catch-all** (`/{path}`) — returns `index.html` for any unmatched GET
-
-This means `/api/v1/reports` hits the FastAPI handler, while `/dashboard` returns the React app.
-
----
-
-## Prerequisites
-
-| Tool | Version |
+| Domain | Technologies |
 |---|---|
-| Python | 3.11+ |
-| Node.js | 18+ |
-| Docker (optional) | 24+ |
+| **Backend** | Python 3.11, FastAPI, SQLAlchemy 2.0 (Async), asyncpg, Alembic, Pydantic |
+| **Frontend** | React 18, Vite, Tailwind CSS, React Query (Tanstack), React Router, Leaflet/react-leaflet |
+| **AI Integration** | Google GenAI SDK (Gemini 2.5 Flash) |
+| **Database** | Neon Serverless PostgreSQL |
+| **Deployment** | Docker (Multi-stage build), Render (Single Web Service) |
 
 ---
 
-## Local Development
+## ✨ Features
+
+- **AI-Powered Incident Triage:** Citizens submit unstructured natural language reports. The system uses Google Gemini to extract structured entities (number of people, hazards, infrastructure damage) and then applies a deterministic rule-based formula to assign a severity score (1-10).
+- **Patient Triage (START Protocol):** Built-in logic for the Simple Triage and Rapid Treatment (START) algorithm, categorizing patients into Immediate, Delayed, Minor, or Expectant based on clinical signs.
+- **Live Priority Dashboard:** A command-center dashboard featuring a heat map of incidents and a live priority queue sorted automatically by AI-calculated severity.
+- **Resource Management:** Real-time tracking of hospitals, shelters, NGOs, and blood banks, including capacity and status, allowing dispatchers to allocate resources efficiently.
+- **Role-Based Access Control (RBAC):** Strict JWT-based segregation between `admin` (dispatchers) and `citizen` (reporters).
+
+---
+
+## 🖥️ Local Setup Instructions
 
 You run **two terminals** — backend and frontend separately. The Vite dev server proxies `/api/*` requests to the FastAPI backend.
 
-### 1. Backend
+### 1. Backend Setup
 
 ```bash
-cd backend
+# Clone the repository
+git clone https://github.com/Jainaksh23/Disaster-Resource-Locator.git
+cd "Disaster-Resource-Locator/backend"
 
 # Create and activate virtual environment
 python -m venv .venv
 # Windows: .venv\Scripts\activate
 # macOS/Linux: source .venv/bin/activate
 
+# Install dependencies
 pip install -r requirements.txt
 
-# Copy .env.example to backend/.env and fill in values
+# Environment variables
 cp ../.env.example .env
-# Edit .env — set DATABASE_URL, GEMINI_API_KEY, JWT_SECRET
+# Edit .env and set:
+# - DATABASE_URL (Neon Postgres connection string)
+# - GEMINI_API_KEY (Google AI Studio key)
+# - JWT_SECRET (Random 32+ char string)
 
-# Run migrations
+# Run database migrations
 alembic upgrade head
 
-# Start backend
+# Start backend server
 uvicorn main:app --reload --port 8000
 ```
 
-API docs: http://localhost:8000/api/docs
-
-### 2. Frontend
+### 2. Frontend Setup
 
 ```bash
 cd frontend
 
+# Install dependencies
 npm install
 
 # Start Vite dev server (proxies /api/* to localhost:8000)
 npm run dev
 ```
+Access the local app at `http://localhost:5173`.
 
-App: http://localhost:5173
-
----
-
-## Environment Variables
-
-Only **3 secrets** are needed (set in Render dashboard for production, in `backend/.env` for local dev):
-
-| Variable | Description |
-|---|---|
-| `DATABASE_URL` | Neon PostgreSQL connection string (`postgresql+asyncpg://...`) |
-| `GEMINI_API_KEY` | Google Gemini API key |
-| `JWT_SECRET` | Random secret for JWT signing (min 32 chars) |
-
-No `ALLOWED_ORIGINS`, `VITE_API_URL`, or CORS vars — same-origin architecture eliminates them.
-
----
-
-## Deployment on Render
-
-### Single Service
-
-1. Push to GitHub.
-2. In [Render Dashboard](https://dashboard.render.com) → **New → Web Service**.
-3. Connect your repo. Render detects `render.yaml` automatically.
-4. Add the 3 environment variables (`DATABASE_URL`, `GEMINI_API_KEY`, `JWT_SECRET`).
-5. Deploy. Render will:
-   - Build the multi-stage Docker image (Node builds React → Python serves everything)
-   - Run `alembic upgrade head` on startup
-   - Start uvicorn
-
-**One URL** serves both the API and the React frontend.
-
-### Neon PostgreSQL
-
-1. Create a project at [neon.tech](https://neon.tech).
-2. Copy the connection string (use `postgresql+asyncpg://` scheme).
-3. Set as `DATABASE_URL` in Render environment variables.
-
----
-
-## Useful Commands
-
+### 3. Production Build (Local Testing)
+To test the single-service architecture locally:
 ```bash
-# Generate a new Alembic migration
-cd backend
-alembic revision --autogenerate -m "describe_your_change"
-alembic upgrade head
-
-# Build frontend for production (testing locally)
 cd frontend
 npm run build
+cd ../backend
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
+Access the fully integrated app at `http://localhost:8000`.
 
-# Build Docker image locally
-docker build -t disaster-locator .
-docker run --env-file backend/.env -p 8000:8000 disaster-locator
+---
+
+## 📖 API Documentation
+
+Once the backend is running, fully interactive Swagger UI documentation is automatically generated and available at:
+👉 **[http://localhost:8000/api/docs](http://localhost:8000/api/docs)**
+
+### Key Endpoints
+- `POST /api/v1/reports/`: Create an incident report (triggers AI triage).
+- `GET /api/v1/dashboard/stats`: Aggregated metrics for the Ops Center.
+- `GET /api/v1/dashboard/map-pins`: GeoJSON/lat-lng points for the heat map.
+
+---
+
+## 📂 Project Structure
+
+```text
+.
+├── backend/                 # FastAPI service
+│   ├── core/                # JWT Auth, database setup, environment config
+│   ├── models/              # SQLAlchemy ORM definitions
+│   ├── routers/             # API route handlers
+│   ├── schemas/             # Pydantic request/response validation
+│   ├── services/            # Business logic (gemini_service.py)
+│   ├── migrations/          # Alembic tracking
+│   ├── main.py              # FastAPI app — routes + SPA serving
+│   └── requirements.txt     
+├── frontend/                # React (Vite) SPA
+│   ├── src/
+│   │   ├── api/             # Relative-path API client
+│   │   ├── components/      # Reusable Tailwind UI components
+│   │   ├── pages/           # Route views (Dashboard, Reports, Map, etc.)
+│   │   └── App.jsx          # React Router setup
+│   └── vite.config.js       # Proxy config
+├── Dockerfile               # Multi-stage (Node build → Python runtime)
+├── render.yaml              # Render deployment configuration
+└── .env.example             
 ```
 
 ---
 
-## API Endpoints
+## 🧠 Key Design Decisions
 
-All endpoints are prefixed with `/api/v1/`:
+### 1. Single-Service Deployment Architecture
+**Decision:** Serve both the React frontend and FastAPI backend from a single Docker container/Render service.
+**Why:** Disaster management tools need absolute reliability and ease of deployment. By having FastAPI mount the static React build (`/assets/*`) and act as a catch-all for SPA routing, we completely eliminate CORS configuration issues, remove the need to manage `VITE_API_URL` environments, and cut hosting costs in half. 
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/health` | Health check |
-| `POST` | `/api/v1/reports/` | Create disaster report |
-| `GET` | `/api/v1/reports/` | List reports (paginated) |
-| `GET` | `/api/v1/reports/{id}` | Get single report |
-| `PATCH` | `/api/v1/reports/{id}` | Update report |
-| `DELETE` | `/api/v1/reports/{id}` | Delete report |
-| `POST` | `/api/v1/resources/` | Register resource |
-| `GET` | `/api/v1/resources/` | List resources |
-| `GET` | `/api/v1/resources/nearby/{report_id}` | Find nearby resources |
-| `POST` | `/api/v1/triage/` | Create triage case |
-| `GET` | `/api/v1/triage/` | List triage cases |
-| `POST` | `/api/v1/triage/{id}/reclassify` | Re-run AI classification |
-| `GET` | `/api/v1/dashboard/stats` | Dashboard statistics |
-| `GET` | `/api/v1/dashboard/map-pins` | Map pin locations |
+### 2. Hybrid Triage: AI + Deterministic Rules
+**Decision:** Use LLMs for entity extraction, but use hardcoded math for the final severity score.
+**Why:** Pure LLM scoring is non-deterministic and can hallucinate severity based on phrasing. By asking Gemini to only output JSON data (e.g., `"injured_count": 5, "infrastructure_damage": true`), the backend parses this and applies a deterministic formula (`severity = injured_count * 2 + damage_modifier...`). This guarantees consistent, mathematically verifiable triage while still benefiting from NLP.
 
-Full interactive docs at `/api/docs` (Swagger UI).
+### 3. Serverless Postgres (Neon) vs Built-in DBs
+**Decision:** Use Neon PostgreSQL instead of Render's built-in DB or SQLite.
+**Why:** Neon offers true serverless scaling. In a disaster scenario, traffic spikes unpredictably. Neon scales compute to zero when idle (saving costs) and scales up instantly during an event. The `postgresql+asyncpg` driver ensures non-blocking database I/O for high concurrency.
 
 ---
 
-## License
+## ⚠️ Known Limitations & Future Work
 
-MIT
+- **RAG / SOP Document Retrieval (Currently Disabled):** The system was initially designed to use FAISS to retrieve Standard Operating Procedures (SOPs) based on the incident report. However, this is temporarily disabled due to compatibility issues between Google's newer `AQ.` format API keys and their embedding models. Once Google resolves this upstream, the FAISS logic in `rag_service.py` will be re-enabled.
+- **WebSocket Live Updates:** Currently, the dashboard relies on React Query polling. Future iterations will implement FastAPI WebSockets to push live map updates instantly.
+- **Push Notifications:** Dispatching SMS or Push Notifications to NGOs/Resources via Twilio API when high-severity events occur nearby.
+
+---
+
+## 📸 Screenshots
+
+*(Screenshots placeholder - Add application screenshots here)*
+
+---
+*Developed for a robust, fast, and scalable response to critical emergencies.*
