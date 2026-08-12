@@ -5,8 +5,11 @@ import json
 import logging
 from pathlib import Path
 
+# pyrefly: ignore [missing-import]
 import faiss
+# pyrefly: ignore [missing-import]
 import numpy as np
+# pyrefly: ignore [missing-import]
 from google import genai
 
 from core.config import get_settings

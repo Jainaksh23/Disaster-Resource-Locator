@@ -42,14 +42,16 @@ export default function Register() {
     <div className="min-h-screen flex items-center justify-center bg-background dark p-4">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <ShieldAlert className="h-12 w-12 text-destructive mb-4" />
-          <h1 className="text-2xl font-bold tracking-tight">DisasterLocator</h1>
-          <p className="text-sm text-muted-foreground mt-2">Create Citizen Account</p>
+          <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+            <ShieldAlert className="h-8 w-8 text-primary" />
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight">DisasterLocator</h1>
+          <p className="text-sm font-medium text-muted-foreground mt-2 uppercase tracking-widest">Create Citizen Account</p>
         </div>
 
-        <Card>
+        <Card className="shadow-2xl border-border/40 bg-card/95 backdrop-blur">
           <CardHeader>
-            <CardTitle>Sign Up</CardTitle>
+            <CardTitle className="text-xl">Sign Up</CardTitle>
             <CardDescription>Join to report and view emergency incidents.</CardDescription>
           </CardHeader>
           <CardContent>

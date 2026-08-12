@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Loader2, Search } from "lucide-react"
+import { Loader2, Search, FileX } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card"
 import { Badge } from "../components/ui/badge"
@@ -26,18 +26,24 @@ export default function Reports() {
 
   const reports = reportsData?.items || []
 
+  const getSeverityBadge = (score) => {
+    if (score >= 8) return "destructive";
+    if (score >= 4) return "warning";
+    return "success";
+  }
+
   return (
     <div className="flex flex-col space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">All Reports</h2>
-          <p className="text-muted-foreground">Manage and track emergency incident reports.</p>
+          <h2 className="text-3xl font-extrabold tracking-tight">All Reports</h2>
+          <p className="text-muted-foreground mt-1">Manage and track emergency incident reports.</p>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 w-full md:w-auto">
           <select 
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-10 w-full md:w-[200px] items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-shadow"
           >
             <option value="all">All Statuses</option>
             <option value="active">Active</option>
@@ -50,18 +56,18 @@ export default function Reports() {
 
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b">
+          <div className="overflow-x-auto w-full custom-scrollbar">
+            <table className="w-full text-sm text-left whitespace-nowrap md:whitespace-normal">
+              <thead className="text-xs text-muted-foreground font-semibold tracking-wider uppercase bg-muted/50 border-b">
                 <tr>
-                  <th className="px-6 py-4 font-medium">Title & Location</th>
-                  <th className="px-6 py-4 font-medium">Category</th>
-                  <th className="px-6 py-4 font-medium">Severity</th>
-                  <th className="px-6 py-4 font-medium">Status</th>
-                  <th className="px-6 py-4 font-medium text-right">Date Reported</th>
+                  <th className="px-6 py-4 font-semibold">Title & Location</th>
+                  <th className="px-6 py-4 font-semibold">Category</th>
+                  <th className="px-6 py-4 font-semibold">Severity</th>
+                  <th className="px-6 py-4 font-semibold">Status</th>
+                  <th className="px-6 py-4 font-semibold text-right">Date Reported</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y divide-border/50">
                 {isLoading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <tr key={i}>
@@ -74,36 +80,46 @@ export default function Reports() {
                   ))
                 ) : reports.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
-                      No reports found.
+                    <td colSpan={5} className="px-6 py-16 text-center">
+                      <div className="flex flex-col items-center justify-center space-y-3">
+                        <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                          <FileX className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                        <p className="text-lg font-medium text-foreground">No reports found</p>
+                        <p className="text-sm text-muted-foreground">Try adjusting your filters or check back later.</p>
+                      </div>
                     </td>
                   </tr>
                 ) : (
                   reports.map((report) => (
                     <tr 
                       key={report.id} 
-                      className="hover:bg-accent/50 cursor-pointer transition-colors"
+                      className="hover:bg-muted/40 cursor-pointer transition-colors"
                       onClick={() => setSelectedReport(report)}
                     >
                       <td className="px-6 py-4">
-                        <div className="font-medium text-foreground">{report.title}</div>
+                        <div className="font-semibold text-foreground text-base">{report.title}</div>
                         <div className="text-xs text-muted-foreground mt-1 line-clamp-1">
                           {report.location_name}
                         </div>
                       </td>
-                      <td className="px-6 py-4 capitalize">
+                      <td className="px-6 py-4 capitalize font-medium text-muted-foreground">
                         {report.category}
                       </td>
                       <td className="px-6 py-4">
-                        <Badge variant={report.severity_score >= 8 ? "destructive" : "default"}>
-                          {report.severity_score}
+                        <Badge variant={getSeverityBadge(report.severity_score)}>
+                          Severity {report.severity_score}
                         </Badge>
                       </td>
-                      <td className="px-6 py-4 uppercase text-[10px]">
+                      <td className="px-6 py-4 uppercase text-[10px] font-bold tracking-wider">
                         <Badge variant="outline">{report.status}</Badge>
                       </td>
-                      <td className="px-6 py-4 text-right text-muted-foreground">
-                        {new Date(report.created_at).toLocaleDateString()}
+                      <td className="px-6 py-4 text-right text-muted-foreground text-xs font-medium">
+                        {new Date(report.created_at).toLocaleDateString(undefined, {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
                       </td>
                     </tr>
                   ))

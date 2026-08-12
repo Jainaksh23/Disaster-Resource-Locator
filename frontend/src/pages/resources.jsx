@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Loader2, Plus, Edit, Trash2 } from "lucide-react"
+import { Loader2, Plus, Edit, Trash2, PackageX } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card"
 import { Badge } from "../components/ui/badge"
@@ -67,7 +67,7 @@ function ResourceModal({ resource, onClose, mode = "add" }) {
 
   return (
     <div className="fixed inset-0 z-[999] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
-      <Card className="w-full max-w-lg shadow-2xl relative">
+      <Card className="w-full max-w-lg shadow-2xl relative max-h-[90vh] overflow-y-auto">
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
@@ -80,8 +80,8 @@ function ResourceModal({ resource, onClose, mode = "add" }) {
         </CardHeader>
         <CardContent>
           <form id="resource-form" onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2 col-span-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2 md:col-span-2">
                 <label className="text-sm font-medium">Name</label>
                 <Input required name="name" value={formData.name} onChange={handleChange} />
               </div>
@@ -92,7 +92,7 @@ function ResourceModal({ resource, onClose, mode = "add" }) {
                   name="resource_type" 
                   value={formData.resource_type} 
                   onChange={handleChange}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background transition-shadow"
                 >
                   <option value="hospital">Hospital</option>
                   <option value="shelter">Shelter</option>
@@ -109,7 +109,7 @@ function ResourceModal({ resource, onClose, mode = "add" }) {
                   name="status" 
                   value={formData.status} 
                   onChange={handleChange}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background transition-shadow"
                 >
                   <option value="available">Available</option>
                   <option value="unavailable">Unavailable</option>
@@ -126,7 +126,7 @@ function ResourceModal({ resource, onClose, mode = "add" }) {
                 <Input type="text" name="contact" value={formData.contact} onChange={handleChange} />
               </div>
 
-              <div className="space-y-2 col-span-2">
+              <div className="space-y-2 md:col-span-2">
                 <label className="text-sm font-medium">Location Name</label>
                 <Input required name="location_name" value={formData.location_name} onChange={handleChange} placeholder="e.g. Connaught Place, Delhi" />
               </div>
@@ -197,29 +197,29 @@ export default function Resources() {
     <div className="flex flex-col space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Manage Resources</h2>
-          <p className="text-muted-foreground">Add, edit, or remove emergency resources.</p>
+          <h2 className="text-3xl font-extrabold tracking-tight">Manage Resources</h2>
+          <p className="text-muted-foreground mt-1">Add, edit, or remove emergency resources.</p>
         </div>
-        <Button onClick={() => setModalState({ isOpen: true, mode: 'add', resource: null })}>
+        <Button className="w-full md:w-auto" onClick={() => setModalState({ isOpen: true, mode: 'add', resource: null })}>
           <Plus className="mr-2 h-4 w-4" /> Add New Resource
         </Button>
       </div>
 
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b">
+          <div className="overflow-x-auto w-full custom-scrollbar">
+            <table className="w-full text-sm text-left whitespace-nowrap md:whitespace-normal">
+              <thead className="text-xs text-muted-foreground font-semibold tracking-wider uppercase bg-muted/50 border-b">
                 <tr>
-                  <th className="px-6 py-4 font-medium">Name & Location</th>
-                  <th className="px-6 py-4 font-medium">Category</th>
-                  <th className="px-6 py-4 font-medium">Capacity</th>
-                  <th className="px-6 py-4 font-medium">Status</th>
-                  <th className="px-6 py-4 font-medium">Contact</th>
-                  <th className="px-6 py-4 font-medium text-right">Actions</th>
+                  <th className="px-6 py-4 font-semibold">Name & Location</th>
+                  <th className="px-6 py-4 font-semibold">Category</th>
+                  <th className="px-6 py-4 font-semibold">Capacity</th>
+                  <th className="px-6 py-4 font-semibold">Status</th>
+                  <th className="px-6 py-4 font-semibold">Contact</th>
+                  <th className="px-6 py-4 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y divide-border/50">
                 {isLoading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <tr key={i}>
@@ -233,27 +233,33 @@ export default function Resources() {
                   ))
                 ) : resources.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
-                      No resources found.
+                    <td colSpan={6} className="px-6 py-16 text-center">
+                      <div className="flex flex-col items-center justify-center space-y-3">
+                        <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                          <PackageX className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                        <p className="text-lg font-medium text-foreground">No resources found</p>
+                        <p className="text-sm text-muted-foreground">Click the 'Add New Resource' button to add one.</p>
+                      </div>
                     </td>
                   </tr>
                 ) : (
                   resources.map((resource) => (
-                    <tr key={resource.id} className="hover:bg-accent/50 transition-colors">
+                    <tr key={resource.id} className="hover:bg-muted/40 transition-colors">
                       <td className="px-6 py-4">
-                        <div className="font-medium text-foreground">{resource.name}</div>
+                        <div className="font-semibold text-foreground text-base">{resource.name}</div>
                         <div className="text-xs text-muted-foreground mt-1 line-clamp-1">
                           {resource.location_name}
                         </div>
                       </td>
-                      <td className="px-6 py-4 capitalize">
+                      <td className="px-6 py-4 capitalize font-medium text-muted-foreground">
                         {resource.resource_type}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 font-medium">
                         {resource.capacity}
                       </td>
-                      <td className="px-6 py-4 uppercase text-[10px]">
-                        <Badge variant={resource.status === 'available' ? 'default' : 'secondary'}>
+                      <td className="px-6 py-4 uppercase text-[10px] font-bold tracking-wider">
+                        <Badge variant={resource.status === 'available' ? 'success' : 'secondary'}>
                           {resource.status}
                         </Badge>
                       </td>
@@ -267,7 +273,7 @@ export default function Resources() {
                             size="icon" 
                             onClick={() => setModalState({ isOpen: true, mode: 'edit', resource })}
                           >
-                            <Edit className="h-4 w-4" />
+                            <Edit className="h-4 w-4 text-muted-foreground hover:text-foreground" />
                           </Button>
                           <Button 
                             variant="ghost" 

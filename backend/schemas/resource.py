@@ -8,7 +8,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
-ResourceType = Literal["hospitals", "shelters", "bloodbanks", "NGOs"]
+ResourceType = Literal["hospital", "shelter", "bloodbank", "ngo", "fire_station", "police_station"]
 ResourceStatus = Literal["available", "deployed", "maintenance", "unavailable"]
 
 

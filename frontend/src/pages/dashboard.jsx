@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { MapContainer, TileLayer, useMap } from "react-leaflet"
 import L from 'leaflet'
 import 'leaflet.heat'
-import { AlertCircle, CheckCircle2, Clock, Users, Activity, Loader2 } from "lucide-react"
+import { AlertCircle, CheckCircle2, Clock, Users, Activity, Loader2, FileX } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card"
 import { Badge } from "../components/ui/badge"
@@ -62,55 +62,61 @@ export default function Dashboard() {
   // Sort reports by severity locally for the priority queue
   const sortedReports = [...reports].sort((a, b) => b.severity_score - a.severity_score)
 
+  const getSeverityBadge = (score) => {
+    if (score >= 8) return "destructive";
+    if (score >= 4) return "warning";
+    return "success";
+  }
+
   return (
     <div className="flex flex-col space-y-6">
       
       {/* ── Stats Row ── */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="hover:border-primary/50 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Incidents</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">Active Incidents</CardTitle>
+            <Activity className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             {statsLoading ? <Skeleton className="h-8 w-20" /> : (
-              <div className="text-2xl font-bold">{stats?.reports?.active || 0}</div>
+              <div className="text-3xl font-extrabold">{stats?.reports?.active || 0}</div>
             )}
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="hover:border-primary/50 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Resources</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">Total Resources</CardTitle>
+            <Users className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             {statsLoading ? <Skeleton className="h-8 w-20" /> : (
-              <div className="text-2xl font-bold">{stats?.resources?.total || 0}</div>
+              <div className="text-3xl font-extrabold">{stats?.resources?.total || 0}</div>
             )}
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="hover:border-primary/50 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Available Resources</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-green-500" />
+            <CardTitle className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">Available Resources</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
             {statsLoading ? <Skeleton className="h-8 w-20" /> : (
-              <div className="text-2xl font-bold">{stats?.resources?.available || 0}</div>
+              <div className="text-3xl font-extrabold">{stats?.resources?.available || 0}</div>
             )}
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:border-primary/50 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Resolved Incidents</CardTitle>
-            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">Resolved Incidents</CardTitle>
+            <AlertCircle className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
             {statsLoading ? <Skeleton className="h-8 w-20" /> : (
-              <div className="text-2xl font-bold">{stats?.reports?.resolved || 0}</div>
+              <div className="text-3xl font-extrabold">{stats?.reports?.resolved || 0}</div>
             )}
           </CardContent>
         </Card>
@@ -119,42 +125,48 @@ export default function Dashboard() {
       <div className="grid gap-6 md:grid-cols-7">
         
         {/* ── Priority Queue ── */}
-        <Card className="md:col-span-4">
+        <Card className="md:col-span-4 flex flex-col">
           <CardHeader>
-            <CardTitle>Live Priority Queue</CardTitle>
+            <CardTitle className="text-xl font-bold">Live Priority Queue</CardTitle>
             <CardDescription>Sorted by AI-calculated severity score.</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex-1">
             {reportsLoading ? (
               <div className="space-y-4">
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-16 w-full rounded-lg" />
+                <Skeleton className="h-16 w-full rounded-lg" />
+                <Skeleton className="h-16 w-full rounded-lg" />
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {sortedReports.map(report => (
                   <div 
                     key={report.id} 
-                    className="flex items-center justify-between p-4 border rounded-lg cursor-pointer hover:bg-accent transition-colors"
+                    className="flex items-center justify-between p-4 border border-border/50 rounded-lg cursor-pointer hover:bg-muted/40 hover:shadow-sm transition-all"
                     onClick={() => setSelectedReport(report)}
                   >
-                    <div className="flex flex-col space-y-1">
-                      <div className="flex items-center space-x-2">
-                        <Badge variant={report.severity_score >= 8 ? "destructive" : "default"}>
+                    <div className="flex flex-col space-y-1.5">
+                      <div className="flex items-center space-x-3">
+                        <Badge variant={getSeverityBadge(report.severity_score)}>
                           Severity {report.severity_score}
                         </Badge>
-                        <span className="font-semibold text-sm">{report.title}</span>
+                        <span className="font-semibold text-base">{report.title}</span>
                       </div>
                       <span className="text-xs text-muted-foreground line-clamp-1">{report.description}</span>
                     </div>
-                    <Badge variant="outline" className="ml-4 shrink-0 uppercase text-[10px]">
+                    <Badge variant="outline" className="ml-4 shrink-0 uppercase text-[10px] font-bold tracking-wider">
                       {report.status}
                     </Badge>
                   </div>
                 ))}
                 {sortedReports.length === 0 && (
-                  <div className="text-center text-muted-foreground py-8 text-sm">No reports in the queue.</div>
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                      <FileX className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm font-medium text-foreground">No reports in the queue</p>
+                    <p className="text-xs text-muted-foreground mt-1">All incidents are currently resolved.</p>
+                  </div>
                 )}
               </div>
             )}
